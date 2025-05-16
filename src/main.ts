@@ -1,5 +1,5 @@
 import './style.css';
-import data from '../public/data.json';
+import data from './data.json'
 import { DatabaseService, type ProductCart } from './database.service.ts';
 
 const cart: Array<ProductCart & { quantity: number }> = [];
@@ -29,15 +29,18 @@ async function renderProducts(products: ProductCart[], card: HTMLDivElement) {
             ? `
               <div class="quantity-controls">
                 <button onclick="updateQuantity(${product.id}, -1) ">
-                <img src="../public/assets/images/icon-decrement-quantity.svg" alt="">
+                <img src="../assets/images/icon-decrement-quantity.svg" alt="">
                 </button>
                 <span>${quantity}</span>
                 <button onclick="updateQuantity(${product.id}, 1)">
-                <img src="../public/assets/images/icon-increment-quantity.svg" alt="">
+                <img src="../assets/images/icon-increment-quantity.svg" alt="">
                 </button>
               </div>
             `
-            : `<button onclick="addToCart(${product.id})" class="add-cart-btn">Add to Cart</button>`
+            : `<button onclick="addToCart(${product.id})" class="add-cart-btn">
+                <img src="../assets/images/icon-add-to-cart.svg" alt="">
+                Add to Cart
+            </button>`
         }
       </div>
     `;
@@ -57,8 +60,10 @@ async function saveCartToIndexedDB(): Promise<void> {
 }
 
 async function updateCartDisplay(): Promise<void> {
+
   const card = document.querySelector<HTMLDivElement>('.cart-content')!;
   const cartCount = document.getElementById('cart-count')!;
+  cartCount.textContent = cart.reduce((sum, i) => sum + i.quantity, 0).toString();
   const orderTotal = document.getElementById('order-total')!;
   let total = 0;
 
@@ -72,7 +77,7 @@ async function updateCartDisplay(): Promise<void> {
         <p>Quantity: ${item.quantity}</p>
         <p>Price: $${itemTotal.toFixed(2)}</p>
         <button onclick="removeFromCart(${item.id})">
-        <img src="../public/assets/images/icon-remove-item.svg" alt="">
+        <img src="../assets/images/icon-remove-item.svg" alt="">
         </button>
       </div>
 
@@ -144,7 +149,7 @@ async function addCart(): Promise<void> {
   if (card && card.innerHTML.trim() === '') {
     card.innerHTML = `
       <div class="emptyclass">
-        <img src="../public/assets/images/illustration-empty-cart.svg" alt="">
+        <img src="../assets/images/illustration-empty-cart.svg" alt="">
         <p>Your added items will appear here</p>
       </div>
     `;
@@ -154,6 +159,29 @@ async function addCart(): Promise<void> {
     
   }
 }
+
+document.getElementById('confirm-order-btn')?.addEventListener('click', async () => {
+  if (cart.length === 0) {
+    alert("Your cart is empty.");
+    return;
+  }
+
+  // Clear cart and database
+  cart.length = 0;
+  await saveCartToIndexedDB();
+  await updateCartDisplay();
+
+  const confirmation = document.getElementById('order-confirmation')!;
+  confirmation.textContent = '✅ Order placed successfully!';
+  confirmation.classList.add('visible');
+
+  // Hide message after a few seconds
+  setTimeout(() => {
+    confirmation.textContent = '';
+    confirmation.classList.remove('visible');
+  }, 3000);
+});
+
 
 }
 
@@ -167,11 +195,12 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <div class="card"></div>
     <div class="cart">
       <h1>Your Cart (<span id="cart-count">0</span>)</h1>
-      <div class="cart-content">
-      
-      </div>
+      <div class="cart-content"></div>
+
+      <div class="cart-footer">
       <div id="order-total">Order Total: $0.00</div>
-          
+       <button id="confirm-order-btn" class="confirm-btn">Confirm Order</button>
+         <div id="order-confirmation" class="confirmation-message"></div>
     </div>
   </div>
 `;
