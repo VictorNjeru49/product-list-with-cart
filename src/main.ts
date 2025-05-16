@@ -17,7 +17,7 @@ console.log(data)
         <div class="products-card" id="product-${product.id}">
             <div class="products-content">
                 <img src="${product.image.desktop}" alt="${product.name}" class="product-thumbnail" />
-                <button onclick ="addItems(${product.id})"> 
+                <button> 
                 <img src="../public/assets/images/icon-add-to-cart.svg" alt="">
                 add to cart
                 </button>
@@ -30,11 +30,7 @@ console.log(data)
 }
 
 
-async function addItems() {
-  
 
-
-}
 
 async function displayProducts() {
     const card = document.querySelector<HTMLDivElement>('.card')!; 
@@ -83,7 +79,6 @@ async function addCart():Promise<void> {
 }
 
 addCart()
-addItems()
 displayProducts();
 
  }
