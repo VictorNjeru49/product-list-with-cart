@@ -83,7 +83,7 @@ async function addCart():Promise<void> {
 }
 
 addCart()
-
+addItems()
 displayProducts();
 
  }
