@@ -1,15 +1,21 @@
 export interface Image {
-    thumbnail: string;
+    thumbnail?: string;
     mobile?: string;
     tablet?: string;
     desktop?: string;
 }
 
-export interface ProductCart extends Image {
+export interface ProductCart  {
+    id?: number;
     name: string;
     category: string;
     price: number;
-    image: Image[];
+    image :{
+        thumbnail?: string;
+        mobile?: string;
+        tablet?: string;
+        desktop?: string;
+    }
 }
 
 export class DatabaseService<T extends ProductCart> {
@@ -41,20 +47,20 @@ export class DatabaseService<T extends ProductCart> {
                 if (!db.objectStoreNames.contains(this.STORE_NAME)) {
                     console.log("Creating object store");
                     const objectStore = db.createObjectStore(this.STORE_NAME, { keyPath: "id", autoIncrement: true });
-                    objectStore.createIndex("title", "title", { unique: false });
+                    objectStore.createIndex("name", "name", { unique: false });
                 }
             };
         });
     }
 
-    async getAllProduct(): Promise<T[]> {
+    async getAllProducts(): Promise<T[]> {
         return new Promise((resolve, reject) => {
             const transaction = this.db!.transaction([this.STORE_NAME], "readonly");
             const objectStore = transaction.objectStore(this.STORE_NAME);
             const request = objectStore.getAll();
 
             request.onerror = (event) => {
-                console.error("Error getting Products:", event);
+                console.error("Error getting products:", event);
                 reject(event);
             };
 
@@ -85,6 +91,44 @@ export class DatabaseService<T extends ProductCart> {
             };
         });
     }
+
+    async updateProduct(product: T): Promise<void> {
+        const transaction = this.db!.transaction([this.STORE_NAME], "readwrite");
+        const objectStore = transaction.objectStore(this.STORE_NAME);
+        const request = objectStore.put(product); 
+
+        return new Promise((resolve, reject) => {
+            request.onsuccess = () => {
+                console.log("Product updated successfully");
+                resolve();
+            };
+
+            request.onerror = (event) => {
+                console.error("Error updating product:", event);
+                reject(event);
+            };
+        });
+    }
+
+    async deleteProduct(id: number): Promise<void> {
+        const transaction = this.db!.transaction([this.STORE_NAME], "readwrite");
+        const objectStore = transaction.objectStore(this.STORE_NAME);
+        const request = objectStore.delete(id); 
+
+        return new Promise((resolve, reject) => {
+            request.onsuccess = () => {
+                console.log("Product deleted successfully");
+                resolve();
+            };
+
+            request.onerror = (event) => {
+                console.error("Error deleting product:", event);
+                reject(event);
+            };
+        });
+    }
+
+    async createProducts(products: T[]): Promise<void> {
+        await this.storeProducts(products); 
+    }
 }
-
-
