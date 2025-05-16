@@ -131,4 +131,31 @@ export class DatabaseService<T extends ProductCart> {
     async createProducts(products: T[]): Promise<void> {
         await this.storeProducts(products); 
     }
+     async loadProducts(): Promise<ProductCart[]> {
+        return new Promise((resolve, reject) => {
+            const transaction = this.db!.transaction([this.STORE_NAME], 'readonly');
+            const objectStore = transaction.objectStore(this.STORE_NAME);
+            const request = objectStore.getAll();
+
+            request.onsuccess = (event) => {
+                const req = event.target as IDBRequest;
+                if (req && req.result) {
+                    resolve(req.result as ProductCart[]);
+                } else {
+                    resolve([]);
+                }
+            };
+
+            request.onerror = (event) => {
+                console.error('Error loading products:', event);
+                reject(event);
+            };
+        });
+    }
+    async clearStore(): Promise<void> {
+  const transaction = this.db!.transaction([this.STORE_NAME], "readwrite");
+  const objectStore = transaction.objectStore(this.STORE_NAME);
+  objectStore.clear();
+}
+
 }
